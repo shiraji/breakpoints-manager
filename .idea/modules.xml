@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/breakpoints-manager.iml" filepath="$PROJECT_DIR$/.idea/modules/breakpoints-manager.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/breakpoints-manager_main.iml" filepath="$PROJECT_DIR$/.idea/modules/breakpoints-manager_main.iml" group="breakpoints-manager" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/breakpoints-manager_test.iml" filepath="$PROJECT_DIR$/.idea/modules/breakpoints-manager_test.iml" group="breakpoints-manager" />
+    </modules>
+  </component>
+</project>
