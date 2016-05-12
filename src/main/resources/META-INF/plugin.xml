@@ -1,5 +1,5 @@
 <idea-plugin version="2">
-  <id>com.github.shiraji.breakpointmanager</id>
+  <id>com.github.shiraji.breakpointsmanager</id>
   <name>Breakpoints Manager</name>
   <vendor email="isogai.shiraji@gmail.com" url="https://github.com/shiraji">Shiraji</vendor>
 
@@ -20,6 +20,8 @@
   -->
 
   <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+    <projectService serviceImplementation="com.github.shiraji.breakpointsmanager.BreakpointManagerConfig"/>
   </extensions>
 
   <application-components>
@@ -29,6 +31,9 @@
   </project-components>
 
   <actions>
+    <action id="com.github.shiraji.breakpointsmanager.BreakpointsManagerAction" class="com.github.shiraji.breakpointsmanager.BreakpointsManagerAction" text="Breakpoints! YEA!" >
+      <add-to-group group-id="ToolsMenu" anchor="last"/>
+    </action>
   </actions>
 
 </idea-plugin>
