@@ -1,39 +1,39 @@
 <idea-plugin version="2">
-  <id>com.github.shiraji.breakpointsmanager</id>
-  <name>Breakpoints Manager</name>
-  <vendor email="isogai.shiraji@gmail.com" url="https://github.com/shiraji">Shiraji</vendor>
+    <id>com.github.shiraji.breakpointsmanager</id>
+    <name>Breakpoints Manager</name>
+    <vendor email="isogai.shiraji@gmail.com" url="https://github.com/shiraji">Shiraji</vendor>
 
-  <description><![CDATA[
+    <description><![CDATA[
     ]]></description>
 
-  <change-notes><![CDATA[
+    <change-notes><![CDATA[
     ]]>
-  </change-notes>
+    </change-notes>
 
-  <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="143"/>
+    <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
+    <idea-version since-build="143"/>
 
-  <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
-       on how to target different products -->
-  <!-- uncomment to enable plugin in all products
-  <depends>com.intellij.modules.lang</depends>
-  -->
+    <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+         on how to target different products -->
+    <!-- uncomment to enable plugin in all products
+    <depends>com.intellij.modules.lang</depends>
+    -->
 
-  <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-    <projectService serviceImplementation="com.github.shiraji.breakpointsmanager.BreakpointManagerConfig"/>
-  </extensions>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="com.github.shiraji.breakpointsmanager.model.BreakpointsManagerConfig"/>
+        <projectService
+                serviceImplementation="com.github.shiraji.breakpointsmanager.model.BreakpointsManagerConfigForWorkspace"/>
+        <toolWindow id="Breakpoints Manager" anchor="bottom"
+                    factoryClass="com.github.shiraji.breakpointsmanager.view.BreakpointsToolWindow"/>
+    </extensions>
 
-  <application-components>
-  </application-components>
+    <application-components>
+    </application-components>
 
-  <project-components>
-  </project-components>
+    <project-components>
+    </project-components>
 
-  <actions>
-    <action id="com.github.shiraji.breakpointsmanager.BreakpointsManagerAction" class="com.github.shiraji.breakpointsmanager.BreakpointsManagerAction" text="Breakpoints! YEA!" >
-      <add-to-group group-id="ToolsMenu" anchor="last"/>
-    </action>
-  </actions>
+    <actions>
+    </actions>
 
 </idea-plugin>

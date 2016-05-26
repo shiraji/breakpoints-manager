@@ -1,4 +1,4 @@
-package com.github.shiraji.breakpointsmanager
+package com.github.shiraji.breakpointsmanager.model
 
 import com.intellij.util.xmlb.annotations.MapAnnotation
 import com.intellij.util.xmlb.annotations.Tag
@@ -11,8 +11,15 @@ import com.intellij.util.xmlb.annotations.Tag
 data class BreakpointsEntity(var typeId: String = "",
                              var fileUrl: String = "",
                              var line: Int = 0,
-                             var condition: String? = null,
+                             var condition: BreakpointsLogExpression? = null,
                              var isTemporary: Boolean = false,
                              var isEnabled: Boolean = false,
                              var isLogMessage: Boolean = false,
-                             var logExpression: String? = null)
+                             var logExpression: BreakpointsLogExpression? = null) : Comparable<BreakpointsEntity> {
+    override fun compareTo(other: BreakpointsEntity): Int {
+        if (this.equals(other)) return 0
+        if (!fileUrl.equals(other.fileUrl)) return fileUrl.compareTo(other.fileUrl)
+        return line.compareTo(other.line)
+    }
+
+}
