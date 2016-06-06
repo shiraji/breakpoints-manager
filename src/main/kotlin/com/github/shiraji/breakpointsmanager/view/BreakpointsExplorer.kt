@@ -37,30 +37,14 @@ import javax.swing.tree.MutableTreeNode
 class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, true), DataProvider, Disposable {
 
     val myTree: Tree
-    val model: DefaultTreeModel
+    val myModel: DefaultTreeModel
 
     init {
-        model = DefaultTreeModel(DefaultMutableTreeNode("Breakpoint Manager")).apply {
-            val config = BreakpointsManagerConfig.getInstance(project)
-            config.state?.entities!!.forEach {
-                val node = DefaultMutableTreeNode(it.key)
-                insertNodeInto(node, root as MutableTreeNode?, getChildCount(root))
-                it.value.sortedBy { it.fileUrl.substringAfterLast(File.separator) }
-                        .sortedBy { it.line }
-                        .forEachIndexed { index, breakpointsEntity -> insertNodeInto(CheckedTreeNode(BreakpointsNodeEntity(breakpointsEntity)), node, index) }
-            }
+        myModel = DefaultTreeModel(DefaultMutableTreeNode("Breakpoint Manager"))
+        insertNodeFromConfig(BreakpointsManagerConfig.getInstance(project))
+        insertNodeFromConfig(BreakpointsManagerConfigForWorkspace.getInstance(project))
 
-            val configForWorkspace = BreakpointsManagerConfigForWorkspace.getInstance(project)
-            configForWorkspace.state?.entities!!.forEach {
-                val node = DefaultMutableTreeNode(it.key)
-                insertNodeInto(node, root as MutableTreeNode?, getChildCount(root))
-                it.value.sortedBy { it.fileUrl.substringAfterLast(File.separator) }
-                        .sortedBy { it.line }
-                        .forEachIndexed { index, breakpointsEntity -> insertNodeInto(CheckedTreeNode(BreakpointsNodeEntity(breakpointsEntity)), node, index) }
-            }
-        }
-
-        myTree = Tree(model).apply {
+        myTree = Tree(myModel).apply {
             isRootVisible = false
             showsRootHandles = true
             dragEnabled = false
@@ -96,6 +80,21 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
         }.installOn(myTree)
 
         setToolbar(createToolbarPanel())
+    }
+
+    private fun insertNodeFromConfig(config: BreakpointsManagerConfig) {
+        config.state?.entities!!.forEach {
+            val node = DefaultMutableTreeNode(it.key)
+            myModel.insertNodeInto(node, myModel.root as MutableTreeNode?, myModel.getChildCount(myModel.root))
+            it.value.sortedBy { it.fileUrl.substringAfterLast(File.separator) }
+                    .sortedBy { it.line }
+                    .forEachIndexed { index, breakpointsEntity ->
+                        val checkedTreeNode = CheckedTreeNode(BreakpointsNodeEntity(breakpointsEntity)).apply {
+                            isChecked = breakpointsEntity.isEnabled
+                        }
+                        myModel.insertNodeInto(checkedTreeNode, node, index)
+                    }
+        }
     }
 
     private fun createToolbarPanel(): JPanel {
@@ -142,8 +141,8 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
 
                 configForW.state?.entities?.put(name, list)
                 val node = DefaultMutableTreeNode(name)
-                model.apply {
-                    insertNodeInto(node, root as MutableTreeNode?, model.getChildCount(model.root))
+                myModel.apply {
+                    insertNodeInto(node, root as MutableTreeNode?, myModel.getChildCount(myModel.root))
                     configForW.state?.entities!![name]?.
                             sortedBy { it.fileUrl.substringAfterLast(File.separator) }?.
                             sortedBy { it.line }?.
@@ -167,7 +166,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                     configForW.state?.entities?.remove(selectedNode.userObject)
                 }
 
-                model.apply {
+                myModel.apply {
                     removeNodeFromParent(selectedNode)
                     reload(selectedNode.parent)
                 }
