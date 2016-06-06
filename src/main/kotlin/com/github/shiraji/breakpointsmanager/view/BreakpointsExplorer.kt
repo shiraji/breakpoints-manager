@@ -184,34 +184,42 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
 
     inner class ApplyAction() : AnAction("Apply the selected breakpoint[s]", "Apply the selected breakpoint[s]", IconUtil.getEmptyIcon(false)) {
         override fun actionPerformed(e: AnActionEvent?) {
-            val manager = XDebuggerManager.getInstance(project) as XDebuggerManagerImpl
             ApplicationManager.getApplication().runWriteAction {
-
                 myTree.selectionPaths.forEach {
                     val selectedPath = it ?: return@runWriteAction
                     val selectedNode = selectedPath.lastPathComponent as DefaultMutableTreeNode
-                    val userObject = (selectedNode.userObject as BreakpointsNodeEntity).entity
-
-                    val find = manager.breakpointManager.allBreakpoints.find {
-                        it is XLineBreakpoint<*> && it.fileUrl == userObject.fileUrl && it.line == userObject.line
-                    }
-
-                    if (find != null) manager.breakpointManager.removeBreakpoint(find)
-
-                    @Suppress("UNCHECKED_CAST")
-                    val type = XBreakpointUtil.findType(userObject.typeId) as XLineBreakpointType<XBreakpointProperties<Any>>?
-                    manager.breakpointManager.addLineBreakpoint(
-                            type,
-                            userObject.fileUrl,
-                            userObject.line,
-                            type?.createBreakpointProperties(VirtualFileManager.getInstance().findFileByUrl(userObject.fileUrl)!!, userObject.line)).let {
-                        it.conditionExpression = userObject.condition?.toXExpression()
-                        it.isTemporary = userObject.isTemporary
-                        it.isEnabled = userObject.isEnabled
-                        it.isLogMessage = userObject.isLogMessage
-                        it.logExpressionObject = userObject.logExpression?.toXExpression()
+                    val userObject = selectedNode.userObject
+                    if (userObject is BreakpointsNodeEntity) {
+                        addBreakpoint(userObject)
+                    } else if (userObject is String) {
+                        val children = selectedNode.children()
+                        while (children.hasMoreElements()) {
+                            addBreakpoint((children.nextElement() as DefaultMutableTreeNode).userObject as BreakpointsNodeEntity)
+                        }
                     }
                 }
+            }
+        }
+
+        fun addBreakpoint(breakpointsNodeEntity: BreakpointsNodeEntity) {
+            val breakpointsEntity = breakpointsNodeEntity.entity
+            val manager = XDebuggerManager.getInstance(project) as XDebuggerManagerImpl
+            val find = manager.breakpointManager.allBreakpoints.find {
+                it is XLineBreakpoint<*> && it.fileUrl == breakpointsEntity.fileUrl && it.line == breakpointsEntity.line
+            }
+            if (find != null) manager.breakpointManager.removeBreakpoint(find)
+            @Suppress("UNCHECKED_CAST")
+            val type = XBreakpointUtil.findType(breakpointsEntity.typeId) as XLineBreakpointType<XBreakpointProperties<Any>>?
+            manager.breakpointManager.addLineBreakpoint(
+                    type,
+                    breakpointsEntity.fileUrl,
+                    breakpointsEntity.line,
+                    type?.createBreakpointProperties(VirtualFileManager.getInstance().findFileByUrl(breakpointsEntity.fileUrl)!!, breakpointsEntity.line)).let {
+                it.conditionExpression = breakpointsEntity.condition?.toXExpression()
+                it.isTemporary = breakpointsEntity.isTemporary
+                it.isEnabled = breakpointsEntity.isEnabled
+                it.isLogMessage = breakpointsEntity.isLogMessage
+                it.logExpressionObject = breakpointsEntity.logExpression?.toXExpression()
             }
         }
     }
