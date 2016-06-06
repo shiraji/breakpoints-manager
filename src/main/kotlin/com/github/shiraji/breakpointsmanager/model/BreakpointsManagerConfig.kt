@@ -7,7 +7,7 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.project.Project
 
 @State(name = "BreakpointManagerConfig", storages = arrayOf(Storage("breakpointManagerConfig.xml")))
-class BreakpointsManagerConfig() : PersistentStateComponent<BreakpointsState> {
+open class BreakpointsManagerConfig() : PersistentStateComponent<BreakpointsState> {
     var myState: BreakpointsState? = BreakpointsState()
 
     companion object {
