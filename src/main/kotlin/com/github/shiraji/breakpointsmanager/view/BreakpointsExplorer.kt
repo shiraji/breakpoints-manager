@@ -139,12 +139,12 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                     ).let { list.add(it) }
                 }
 
-                configForW.state?.entities?.put(name, list)
+                val entities = BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities ?: return
+                entities.put(name, list)
                 val node = DefaultMutableTreeNode(name)
                 myModel.apply {
                     insertNodeInto(node, root as MutableTreeNode?, myModel.getChildCount(myModel.root))
-                    configForW.state?.entities!![name]?.
-                            sortedBy { it.fileUrl.substringAfterLast(File.separator) }?.
+                    entities[name]?.sortedBy { it.fileUrl.substringAfterLast(File.separator) }?.
                             sortedBy { it.line }?.
                             forEachIndexed { index, breakpointsEntity -> insertNodeInto(CheckedTreeNode(BreakpointsNodeEntity(breakpointsEntity)), node, index) }
                     reload()
