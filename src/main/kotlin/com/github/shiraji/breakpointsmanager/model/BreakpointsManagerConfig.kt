@@ -7,18 +7,18 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.project.Project
 
 @State(name = "BreakpointManagerConfig", storages = arrayOf(Storage("breakpointManagerConfig.xml")))
-open class BreakpointsManagerConfig() : PersistentStateComponent<BreakpointsState> {
-    var myState: BreakpointsState? = BreakpointsState()
+open class BreakpointsManagerConfig() : PersistentStateComponent<BreakpointState> {
+    var myState: BreakpointState? = BreakpointState()
 
     companion object {
         fun getInstance(project: Project) = ServiceManager.getService(project, BreakpointsManagerConfig::class.java)
     }
 
-    override fun loadState(state: BreakpointsState) {
+    override fun loadState(state: BreakpointState) {
         myState = state
     }
 
-    override fun getState(): BreakpointsState? {
+    override fun getState(): BreakpointState? {
         return myState
     }
 }

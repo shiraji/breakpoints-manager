@@ -12,9 +12,9 @@ import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
         surroundKeyWithTag = false,
         surroundValueWithTag = false,
         keyAttributeName = "name")
-data class BreakpointsLogExpression(var expression: String = "",
-                                    var languageId: String? = null,
-                                    var customInfo: String? = null,
-                                    var mode: EvaluationMode = EvaluationMode.EXPRESSION) {
+data class BreakpointExpression(var expression: String = "",
+                                var languageId: String? = null,
+                                var customInfo: String? = null,
+                                var mode: EvaluationMode = EvaluationMode.EXPRESSION) {
     fun toXExpression() = XExpressionImpl(expression, Language.findLanguageByID(languageId), customInfo, mode)
 }

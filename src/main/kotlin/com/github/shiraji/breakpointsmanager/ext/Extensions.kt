@@ -1,12 +1,12 @@
 package com.github.shiraji.breakpointsmanager.ext
 
-import com.github.shiraji.breakpointsmanager.model.BreakpointsLogExpression
+import com.github.shiraji.breakpointsmanager.model.BreakpointExpression
 import com.intellij.xdebugger.XExpression
 
-fun XExpression?.convertToEntity(): BreakpointsLogExpression? {
+fun XExpression?.convertToEntity(): BreakpointExpression? {
     this ?: return null
 
-    return BreakpointsLogExpression().apply {
+    return BreakpointExpression().apply {
         val exp = this@convertToEntity
         languageId = exp.language?.id
         customInfo = exp.customInfo

@@ -1,10 +1,10 @@
 package com.github.shiraji.breakpointsmanager.view
 
 import com.github.shiraji.breakpointsmanager.ext.convertToEntity
-import com.github.shiraji.breakpointsmanager.model.BreakpointsEntity
+import com.github.shiraji.breakpointsmanager.model.BreakpointEntity
+import com.github.shiraji.breakpointsmanager.model.BreakpointNodeEntity
 import com.github.shiraji.breakpointsmanager.model.BreakpointsManagerConfig
 import com.github.shiraji.breakpointsmanager.model.BreakpointsManagerConfigForWorkspace
-import com.github.shiraji.breakpointsmanager.model.BreakpointsNodeEntity
 import com.intellij.ide.util.treeView.NodeRenderer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
@@ -72,7 +72,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                 val path = myTree.getClosestPathForLocation(event.x, event.y)
                 val selectedNode = path.lastPathComponent
                 if (selectedNode !is CheckedTreeNode) return true
-                val breakpointsEntity = selectedNode.userObject as BreakpointsNodeEntity
+                val breakpointsEntity = selectedNode.userObject as BreakpointNodeEntity
                 val virtualFile = VirtualFileManager.getInstance().findFileByUrl(breakpointsEntity.entity.fileUrl)!!
                 XSourcePositionImpl.create(virtualFile, breakpointsEntity.entity.line)!!.createNavigatable(project).navigate(true)
                 return true
@@ -89,7 +89,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             it.value.sortedBy { it.fileUrl.substringAfterLast(File.separator) }
                     .sortedBy { it.line }
                     .forEachIndexed { index, breakpointsEntity ->
-                        val checkedTreeNode = CheckedTreeNode(BreakpointsNodeEntity(breakpointsEntity)).apply {
+                        val checkedTreeNode = CheckedTreeNode(BreakpointNodeEntity(breakpointsEntity)).apply {
                             isChecked = breakpointsEntity.isEnabled
                         }
                         myModel.insertNodeInto(checkedTreeNode, node, index)
@@ -110,13 +110,13 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             val dialog = BreakpointsSetNameDialog(project, getAreadlyExistsNames())
             if (dialog.showAndGet()) {
                 val name = dialog.nameTextField.text
-                val list = mutableListOf<BreakpointsEntity>()
+                val list = mutableListOf<BreakpointEntity>()
                 (XDebuggerManager.getInstance(project) as XDebuggerManagerImpl).breakpointManager.allBreakpoints.forEachIndexed { i, it ->
                     if (it !is XLineBreakpoint<*>) return@forEachIndexed
 
                     @Suppress("UNCHECKED_CAST")
                     val type = (it as XLineBreakpoint<XBreakpointProperties<Any>>).type
-                    BreakpointsEntity(
+                    BreakpointEntity(
                             fileUrl = it.fileUrl,
                             typeId = type.id,
                             line = it.line,
@@ -135,7 +135,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                     insertNodeInto(node, root as MutableTreeNode?, myModel.getChildCount(myModel.root))
                     entities[name]?.sortedBy { it.fileUrl.substringAfterLast(File.separator) }?.
                             sortedBy { it.line }?.
-                            forEachIndexed { index, breakpointsEntity -> insertNodeInto(CheckedTreeNode(BreakpointsNodeEntity(breakpointsEntity)), node, index) }
+                            forEachIndexed { index, breakpointsEntity -> insertNodeInto(CheckedTreeNode(BreakpointNodeEntity(breakpointsEntity)), node, index) }
                     reload()
                 }
             }
@@ -189,20 +189,20 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                     val selectedPath = it ?: return@runWriteAction
                     val selectedNode = selectedPath.lastPathComponent as DefaultMutableTreeNode
                     val userObject = selectedNode.userObject
-                    if (userObject is BreakpointsNodeEntity) {
+                    if (userObject is BreakpointNodeEntity) {
                         addBreakpoint(userObject)
                     } else if (userObject is String) {
                         val children = selectedNode.children()
                         while (children.hasMoreElements()) {
-                            addBreakpoint((children.nextElement() as DefaultMutableTreeNode).userObject as BreakpointsNodeEntity)
+                            addBreakpoint((children.nextElement() as DefaultMutableTreeNode).userObject as BreakpointNodeEntity)
                         }
                     }
                 }
             }
         }
 
-        fun addBreakpoint(breakpointsNodeEntity: BreakpointsNodeEntity) {
-            val breakpointsEntity = breakpointsNodeEntity.entity
+        fun addBreakpoint(breakpointNodeEntity: BreakpointNodeEntity) {
+            val breakpointsEntity = breakpointNodeEntity.entity
             val manager = XDebuggerManager.getInstance(project) as XDebuggerManagerImpl
             val find = manager.breakpointManager.allBreakpoints.find {
                 it is XLineBreakpoint<*> && it.fileUrl == breakpointsEntity.fileUrl && it.line == breakpointsEntity.line
