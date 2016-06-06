@@ -185,28 +185,31 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
         override fun actionPerformed(e: AnActionEvent?) {
             val manager = XDebuggerManager.getInstance(project) as XDebuggerManagerImpl
             ApplicationManager.getApplication().runWriteAction {
-                val selectedPath = myTree.selectionPath ?: return@runWriteAction
-                val selectedNode = selectedPath.lastPathComponent as DefaultMutableTreeNode
-                val userObject = (selectedNode.userObject as BreakpointsNodeEntity).entity
 
-                val find = manager.breakpointManager.allBreakpoints.find {
-                    it is XLineBreakpoint<*> && it.fileUrl == userObject.fileUrl && it.line == userObject.line
-                }
+                myTree.selectionPaths.forEach {
+                    val selectedPath = it ?: return@runWriteAction
+                    val selectedNode = selectedPath.lastPathComponent as DefaultMutableTreeNode
+                    val userObject = (selectedNode.userObject as BreakpointsNodeEntity).entity
 
-                if (find != null) manager.breakpointManager.removeBreakpoint(find)
+                    val find = manager.breakpointManager.allBreakpoints.find {
+                        it is XLineBreakpoint<*> && it.fileUrl == userObject.fileUrl && it.line == userObject.line
+                    }
 
-                @Suppress("UNCHECKED_CAST")
-                val type = XBreakpointUtil.findType(userObject.typeId) as XLineBreakpointType<XBreakpointProperties<Any>>?
-                manager.breakpointManager.addLineBreakpoint(
-                        type,
-                        userObject.fileUrl,
-                        userObject.line,
-                        type?.createBreakpointProperties(VirtualFileManager.getInstance().findFileByUrl(userObject.fileUrl)!!, userObject.line)).let {
-                    it.conditionExpression = userObject.condition?.toXExpression()
-                    it.isTemporary = userObject.isTemporary
-                    it.isEnabled = userObject.isEnabled
-                    it.isLogMessage = userObject.isLogMessage
-                    it.logExpressionObject = userObject.logExpression?.toXExpression()
+                    if (find != null) manager.breakpointManager.removeBreakpoint(find)
+
+                    @Suppress("UNCHECKED_CAST")
+                    val type = XBreakpointUtil.findType(userObject.typeId) as XLineBreakpointType<XBreakpointProperties<Any>>?
+                    manager.breakpointManager.addLineBreakpoint(
+                            type,
+                            userObject.fileUrl,
+                            userObject.line,
+                            type?.createBreakpointProperties(VirtualFileManager.getInstance().findFileByUrl(userObject.fileUrl)!!, userObject.line)).let {
+                        it.conditionExpression = userObject.condition?.toXExpression()
+                        it.isTemporary = userObject.isTemporary
+                        it.isEnabled = userObject.isEnabled
+                        it.isLogMessage = userObject.isLogMessage
+                        it.logExpressionObject = userObject.logExpression?.toXExpression()
+                    }
                 }
             }
         }
