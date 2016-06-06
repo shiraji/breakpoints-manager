@@ -107,18 +107,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
 
     inner class AddAction() : AnAction("Save all breakpoints", "Save all breakpoints with unique name. Later, the developers can restore this breakpoints set", IconUtil.getAddIcon()) {
         override fun actionPerformed(e: AnActionEvent) {
-
-            val configForW = BreakpointsManagerConfigForWorkspace.getInstance(project)
-            val config = BreakpointsManagerConfig.getInstance(project)
-
-            val names = config.state?.entities?.keys
-            val namesForW = configForW.state?.entities?.keys
-
-            val alreadyExistsNames = mutableListOf<String>()
-            if (names != null) alreadyExistsNames.addAll(names)
-            if (namesForW != null) alreadyExistsNames.addAll(namesForW)
-
-            val dialog = BreakpointsSetNameDialog(project, alreadyExistsNames.toTypedArray())
+            val dialog = BreakpointsSetNameDialog(project, getAreadlyExistsNames())
             if (dialog.showAndGet()) {
                 val name = dialog.nameTextField.text
                 val list = mutableListOf<BreakpointsEntity>()
@@ -150,6 +139,19 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                     reload()
                 }
             }
+        }
+
+        private fun getAreadlyExistsNames(): Array<String> {
+            val configForW = BreakpointsManagerConfigForWorkspace.getInstance(project)
+            val config = BreakpointsManagerConfig.getInstance(project)
+
+            val names = config.state?.entities?.keys
+            val namesForW = configForW.state?.entities?.keys
+
+            val alreadyExistsNames = mutableListOf<String>()
+            if (names != null) alreadyExistsNames.addAll(names)
+            if (namesForW != null) alreadyExistsNames.addAll(namesForW)
+            return alreadyExistsNames.toTypedArray()
         }
     }
 
