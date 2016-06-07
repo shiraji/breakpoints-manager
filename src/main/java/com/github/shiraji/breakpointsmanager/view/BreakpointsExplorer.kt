@@ -154,21 +154,46 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
 
     inner class RemoveAction(icon: Icon) : AnAction("Remove the selected breakpoint[s] from settings", "Remove the selected breakpoint[s] from settings. This action does not remove breakpoints that are currently on the editor", icon) {
         override fun actionPerformed(e: AnActionEvent) {
-            val config = BreakpointsManagerConfig.getInstance(project)
-            val configForW = BreakpointsManagerConfigForWorkspace.getInstance(project)
             myTree.selectionPaths?.forEach {
                 val selectedNode = it.lastPathComponent as DefaultMutableTreeNode
-                val isShared = config.state?.entities?.contains(selectedNode.userObject) ?: false
-                if (isShared) {
-                    config.state?.entities?.remove(selectedNode.userObject)
-                } else {
-                    configForW.state?.entities?.remove(selectedNode.userObject)
+                val userObject = selectedNode.userObject
+
+                if (userObject is BreakpointsSetNode) {
+                    removeKey(userObject.name)
+                } else if (userObject is BreakpointNodeEntity) {
+                    val parent = selectedNode.parent as DefaultMutableTreeNode
+                    removeBreakpointEntity(userObject.entity, (parent.userObject as BreakpointsSetNode).name)
                 }
 
                 myModel.apply {
                     removeNodeFromParent(selectedNode)
                     reload(selectedNode.parent)
                 }
+            }
+        }
+
+        private fun removeKey(key: String) {
+            val config = BreakpointsManagerConfig.getInstance(project)
+            val configForW = BreakpointsManagerConfigForWorkspace.getInstance(project)
+
+            val isShared = config.state?.entities?.contains(key) ?: false
+            if (isShared) {
+                config.state?.entities?.remove(key)
+            } else {
+                configForW.state?.entities?.remove(key)
+            }
+        }
+
+        private fun removeBreakpointEntity(target: BreakpointEntity, key: String) {
+            val config = BreakpointsManagerConfig.getInstance(project)
+            val configForW = BreakpointsManagerConfigForWorkspace.getInstance(project)
+            val isShared = config.state?.entities?.contains(key) ?: false
+            if (isShared) {
+                val value = config.state?.entities?.get(key) ?: return
+                value.remove(target)
+            } else {
+                val value = configForW.state?.entities?.get(key) ?: return
+                value.remove(target)
             }
         }
 
