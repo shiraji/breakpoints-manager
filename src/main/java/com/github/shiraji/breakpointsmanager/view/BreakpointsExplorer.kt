@@ -1,10 +1,7 @@
 package com.github.shiraji.breakpointsmanager.view
 
 import com.github.shiraji.breakpointsmanager.ext.convertToEntity
-import com.github.shiraji.breakpointsmanager.model.BreakpointEntity
-import com.github.shiraji.breakpointsmanager.model.BreakpointNodeEntity
-import com.github.shiraji.breakpointsmanager.model.BreakpointsManagerConfig
-import com.github.shiraji.breakpointsmanager.model.BreakpointsManagerConfigForWorkspace
+import com.github.shiraji.breakpointsmanager.model.*
 import com.intellij.ide.util.treeView.NodeRenderer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
@@ -84,7 +81,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
 
     private fun insertNodeFromConfig(config: BreakpointsManagerConfig) {
         config.state?.entities!!.forEach {
-            val node = DefaultMutableTreeNode(it.key)
+            val node = DefaultMutableTreeNode(BreakpointsSetNode(it.key, (config !is BreakpointsManagerConfigForWorkspace)))
             myModel.insertNodeInto(node, myModel.root as MutableTreeNode?, myModel.getChildCount(myModel.root))
             it.value.sortedBy { it.fileUrl.substringAfterLast(File.separator) }
                     .sortedBy { it.line }
@@ -130,7 +127,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
 
                 val entities = BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities ?: return
                 entities.put(name, list)
-                val node = DefaultMutableTreeNode(name)
+                val node = DefaultMutableTreeNode(BreakpointsSetNode(name, false))
                 myModel.apply {
                     insertNodeInto(node, root as MutableTreeNode?, myModel.getChildCount(myModel.root))
                     entities[name]?.sortedBy { it.fileUrl.substringAfterLast(File.separator) }?.
@@ -226,18 +223,17 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
 
     inner class ShareAction() : AnAction("Share selected breakpoint[s] to project", "Share selected breakpoint[s] to project", IconUtil.getEmptyIcon(false)) {
         override fun actionPerformed(e: AnActionEvent?) {
-            val config = BreakpointsManagerConfig.getInstance(project)
-            val configForW = BreakpointsManagerConfigForWorkspace.getInstance(project)
             val selectedPath = myTree.selectionPath ?: return
             val selectedNode = selectedPath.lastPathComponent as DefaultMutableTreeNode
-            val nodeName = selectedNode.userObject as? String ?: return
-
-            val hasNode = configForW.state?.entities?.contains(nodeName) ?: false
-            if (hasNode) {
-                val entities = configForW.state!!.entities
+            val userObject = selectedNode.userObject as? BreakpointsSetNode ?: return
+            val nodeName = userObject.name
+            val entities = BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities ?: return
+            if (entities.contains(nodeName)) {
                 val node = entities[nodeName]
-                config.state?.entities?.put(nodeName, node!!)
+                BreakpointsManagerConfig.getInstance(project).state?.entities?.put(nodeName, node!!)
                 entities.remove(nodeName)
+                userObject.isShared = true
+                myModel.reload()
             }
         }
 
@@ -252,7 +248,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             } else {
                 e.presentation.isVisible = true
                 e.presentation.isEnabled = selectedPath.lastPathComponent !is CheckedTreeNode
-                        && BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities?.containsKey((selectedPath.lastPathComponent as DefaultMutableTreeNode).userObject) ?: false
+                        && BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities?.containsKey((((selectedPath.lastPathComponent as DefaultMutableTreeNode).userObject) as BreakpointsSetNode).name) ?: false
             }
         }
     }
