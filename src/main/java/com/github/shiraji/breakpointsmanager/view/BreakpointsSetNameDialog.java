@@ -11,9 +11,9 @@ public class BreakpointsSetNameDialog extends DialogBuilder {
 
     private BreakpointsSetNameDialogDelegate delegate;
 
-    public BreakpointsSetNameDialog(Project project, String[] alreadyExistsNames) {
+    public BreakpointsSetNameDialog(Project project) {
         super(project);
-        delegate = new BreakpointsSetNameDialogDelegate(this, alreadyExistsNames);
+        delegate = new BreakpointsSetNameDialogDelegate(this);
         delegate.initDialog();
         setCenterPanel(contentPane);
     }
