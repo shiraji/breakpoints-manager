@@ -69,7 +69,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                 val path = myTree.getClosestPathForLocation(event.x, event.y)
                 val selectedNode = path.lastPathComponent
                 if (selectedNode !is CheckedTreeNode) return true
-                val breakpointsEntity = selectedNode.userObject as BreakpointNodeEntity
+                val breakpointsEntity = selectedNode.userObject as BreakpointEntityNode
                 val virtualFile = VirtualFileManager.getInstance().findFileByUrl(breakpointsEntity.entity.fileUrl)!!
                 XSourcePositionImpl.create(virtualFile, breakpointsEntity.entity.line)!!.createNavigatable(project).navigate(true)
                 return true
@@ -81,12 +81,12 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
 
     private fun insertNodeFromConfig(config: BreakpointsManagerConfig) {
         config.state?.entities!!.forEach {
-            val node = DefaultMutableTreeNode(BreakpointsSetNode(it.key, (config !is BreakpointsManagerConfigForWorkspace)))
+            val node = DefaultMutableTreeNode(BreakpointsSetNode(BreakpointsSetInfo(id = it.key.id, name = it.key.name), isShared = (config !is BreakpointsManagerConfigForWorkspace)))
             myModel.insertNodeInto(node, myModel.root as MutableTreeNode?, myModel.getChildCount(myModel.root))
             it.value.sortedBy { it.fileUrl.substringAfterLast(File.separator) }
                     .sortedBy { it.line }
                     .forEachIndexed { index, breakpointsEntity ->
-                        val checkedTreeNode = CheckedTreeNode(BreakpointNodeEntity(breakpointsEntity)).apply {
+                        val checkedTreeNode = CheckedTreeNode(BreakpointEntityNode(breakpointsEntity)).apply {
                             isChecked = breakpointsEntity.isEnabled
                         }
                         myModel.insertNodeInto(checkedTreeNode, node, index)
@@ -126,13 +126,14 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                 }
 
                 val entities = BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities ?: return
-                entities.put(name, list)
-                val node = DefaultMutableTreeNode(BreakpointsSetNode(name, false))
+                val key = BreakpointsSetInfo(name = name)
+                entities.put(key, list)
+                val node = DefaultMutableTreeNode(BreakpointsSetNode(key, isShared = false))
                 myModel.apply {
                     insertNodeInto(node, root as MutableTreeNode?, myModel.getChildCount(myModel.root))
-                    entities[name]?.sortedBy { it.fileUrl.substringAfterLast(File.separator) }?.
+                    entities[key]?.sortedBy { it.fileUrl.substringAfterLast(File.separator) }?.
                             sortedBy { it.line }?.
-                            forEachIndexed { index, breakpointsEntity -> insertNodeInto(CheckedTreeNode(BreakpointNodeEntity(breakpointsEntity)), node, index) }
+                            forEachIndexed { index, breakpointsEntity -> insertNodeInto(CheckedTreeNode(BreakpointEntityNode(breakpointsEntity)), node, index) }
                     reload()
                 }
             }
@@ -146,10 +147,10 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                 val userObject = selectedNode.userObject
 
                 if (userObject is BreakpointsSetNode) {
-                    removeKey(userObject.name)
-                } else if (userObject is BreakpointNodeEntity) {
+                    removeKey(userObject.breakpointsSetInfo)
+                } else if (userObject is BreakpointEntityNode) {
                     val parent = selectedNode.parent as DefaultMutableTreeNode
-                    removeBreakpointEntity(userObject.entity, (parent.userObject as BreakpointsSetNode).name)
+                    removeBreakpointEntity(userObject.entity, (parent.userObject as BreakpointsSetNode).breakpointsSetInfo)
                 }
 
                 myModel.apply {
@@ -159,7 +160,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             }
         }
 
-        private fun removeKey(key: String) {
+        private fun removeKey(key: BreakpointsSetInfo) {
             val config = BreakpointsManagerConfig.getInstance(project)
             val configForW = BreakpointsManagerConfigForWorkspace.getInstance(project)
 
@@ -171,7 +172,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             }
         }
 
-        private fun removeBreakpointEntity(target: BreakpointEntity, key: String) {
+        private fun removeBreakpointEntity(target: BreakpointEntity, key: BreakpointsSetInfo) {
             val config = BreakpointsManagerConfig.getInstance(project)
             val configForW = BreakpointsManagerConfigForWorkspace.getInstance(project)
             val isShared = config.state?.entities?.contains(key) ?: false
@@ -198,20 +199,20 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                     val selectedPath = it ?: return@runWriteAction
                     val selectedNode = selectedPath.lastPathComponent as DefaultMutableTreeNode
                     val userObject = selectedNode.userObject
-                    if (userObject is BreakpointNodeEntity) {
+                    if (userObject is BreakpointEntityNode) {
                         addBreakpoint(userObject)
                     } else if (userObject is String) {
                         val children = selectedNode.children()
                         while (children.hasMoreElements()) {
-                            addBreakpoint((children.nextElement() as DefaultMutableTreeNode).userObject as BreakpointNodeEntity)
+                            addBreakpoint((children.nextElement() as DefaultMutableTreeNode).userObject as BreakpointEntityNode)
                         }
                     }
                 }
             }
         }
 
-        fun addBreakpoint(breakpointNodeEntity: BreakpointNodeEntity) {
-            val breakpointsEntity = breakpointNodeEntity.entity
+        fun addBreakpoint(breakpointEntityNode: BreakpointEntityNode) {
+            val breakpointsEntity = breakpointEntityNode.entity
             val manager = XDebuggerManager.getInstance(project) as XDebuggerManagerImpl
             val find = manager.breakpointManager.allBreakpoints.find {
                 it is XLineBreakpoint<*> && it.fileUrl == breakpointsEntity.fileUrl && it.line == breakpointsEntity.line
@@ -238,12 +239,11 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             val selectedPath = myTree.selectionPath ?: return
             val selectedNode = selectedPath.lastPathComponent as DefaultMutableTreeNode
             val userObject = selectedNode.userObject as? BreakpointsSetNode ?: return
-            val nodeName = userObject.name
             val entities = BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities ?: return
-            if (entities.contains(nodeName)) {
-                val node = entities[nodeName]
-                BreakpointsManagerConfig.getInstance(project).state?.entities?.put(nodeName, node!!)
-                entities.remove(nodeName)
+            if (entities.contains(userObject.breakpointsSetInfo)) {
+                val node = entities[userObject.breakpointsSetInfo]
+                BreakpointsManagerConfig.getInstance(project).state?.entities?.put(userObject.breakpointsSetInfo, node!!)
+                entities.remove(userObject.breakpointsSetInfo)
                 userObject.isShared = true
                 myModel.reload()
             }
@@ -260,7 +260,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             } else {
                 e.presentation.isVisible = true
                 e.presentation.isEnabled = selectedPath.lastPathComponent !is CheckedTreeNode
-                        && BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities?.containsKey((((selectedPath.lastPathComponent as DefaultMutableTreeNode).userObject) as BreakpointsSetNode).name) ?: false
+                        && BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities?.containsKey((((selectedPath.lastPathComponent as DefaultMutableTreeNode).userObject) as BreakpointsSetNode).breakpointsSetInfo) ?: false
             }
         }
     }
