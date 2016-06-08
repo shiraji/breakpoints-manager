@@ -145,18 +145,26 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             myTree.selectionPaths?.forEach {
                 val selectedNode = it.lastPathComponent as DefaultMutableTreeNode
                 val userObject = selectedNode.userObject
+                val parent = (selectedNode.parent as DefaultMutableTreeNode)
 
+                removeNode(selectedNode)
                 if (userObject is BreakpointsSetNode) {
                     removeKey(userObject.breakpointsSetInfo)
                 } else if (userObject is BreakpointEntityNode) {
-                    val parent = selectedNode.parent as DefaultMutableTreeNode
-                    removeBreakpointEntity(userObject.entity, (parent.userObject as BreakpointsSetNode).breakpointsSetInfo)
+                    val key = (parent.userObject as BreakpointsSetNode).breakpointsSetInfo
+                    removeBreakpointEntity(userObject.entity, key)
+                    if (parent.childCount == 0) {
+                        removeKey(key)
+                        removeNode(parent)
+                    }
                 }
+            }
+        }
 
-                myModel.apply {
-                    removeNodeFromParent(selectedNode)
-                    reload(selectedNode.parent)
-                }
+        private fun removeNode(node: DefaultMutableTreeNode) {
+            myModel.apply {
+                removeNodeFromParent(node)
+                reload(node.parent)
             }
         }
 
