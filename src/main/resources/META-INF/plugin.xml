@@ -4,9 +4,14 @@
     <vendor email="isogai.shiraji@gmail.com" url="https://github.com/shiraji">Shiraji</vendor>
 
     <description><![CDATA[
+    The IntelliJ plugin that helps share/save breakpoints
     ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.0.0</p>
+        <ul>
+            <li>Initial release</li>
+        </ul>
     ]]>
     </change-notes>
 
