@@ -138,6 +138,12 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                 }
             }
         }
+
+        override fun update(e: AnActionEvent?) {
+            e ?: return
+            super.update(e)
+            e.presentation.isEnabled = (XDebuggerManager.getInstance(project) as XDebuggerManagerImpl).breakpointManager.allBreakpoints.find { it is XLineBreakpoint<*> } != null
+        }
     }
 
     inner class RemoveAction(icon: Icon) : AnAction("Remove the selected breakpoint[s] from settings", "Remove the selected breakpoint[s] from settings. This action does not remove breakpoints that are currently on the editor", icon) {
