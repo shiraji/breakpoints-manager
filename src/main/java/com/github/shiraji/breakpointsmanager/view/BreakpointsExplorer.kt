@@ -215,7 +215,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                     val userObject = selectedNode.userObject
                     if (userObject is BreakpointEntityNode) {
                         addBreakpoint(userObject)
-                    } else if (userObject is String) {
+                    } else if (userObject is BreakpointsSetNode) {
                         val children = selectedNode.children()
                         while (children.hasMoreElements()) {
                             addBreakpoint((children.nextElement() as DefaultMutableTreeNode).userObject as BreakpointEntityNode)
