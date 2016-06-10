@@ -52,6 +52,7 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                     val actionGroup = DefaultActionGroup()
                     actionGroup.add(ApplyAction())
                     actionGroup.add(ShareAction())
+                    actionGroup.add(DisableAction())
                     actionGroup.add(RemoveAction(IconUtil.getEmptyIcon(false)))
                     ActionManager.getInstance().createActionPopupMenu("BreakpointsExplorerPopup", actionGroup).component.show(component, x, y)
                 }
@@ -276,6 +277,42 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                 e.presentation.isEnabled = selectedPath.lastPathComponent !is CheckedTreeNode
                         && BreakpointsManagerConfigForWorkspace.getInstance(project).state?.entities?.containsKey((((selectedPath.lastPathComponent as DefaultMutableTreeNode).userObject) as BreakpointsSetNode).breakpointsSetInfo) ?: false
             }
+        }
+    }
+
+    inner class DisableAction() : AnAction("Disable selected breakpoint[s]", "Disable selected breakpoint[s]. If selected breakpoints are not applied, they will be ignored", IconUtil.getEmptyIcon(false)) {
+        override fun actionPerformed(e: AnActionEvent?) {
+            ApplicationManager.getApplication().runWriteAction {
+                myTree.selectionPaths.forEach {
+                    val selectedPath = it ?: return@runWriteAction
+                    val selectedNode = selectedPath.lastPathComponent as DefaultMutableTreeNode
+                    val userObject = selectedNode.userObject
+                    if (userObject is BreakpointEntityNode) {
+                        disableBreakpoint(userObject)
+                    } else if (userObject is BreakpointsSetNode) {
+                        val children = selectedNode.children()
+                        while (children.hasMoreElements()) {
+                            disableBreakpoint((children.nextElement() as DefaultMutableTreeNode).userObject as BreakpointEntityNode)
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun disableBreakpoint(node: BreakpointEntityNode) {
+            (XDebuggerManager.getInstance(project) as XDebuggerManagerImpl).breakpointManager.allBreakpoints.forEach {
+                if (it !is XLineBreakpoint<*>) return@forEach
+
+                if (it.fileUrl == node.entity.fileUrl && it.line == node.entity.line) {
+                    it.isEnabled = false
+                }
+            }
+        }
+
+        override fun update(e: AnActionEvent?) {
+            e ?: return
+            super.update(e)
+            e.presentation.isEnabled = myTree.selectionPath != null
         }
     }
 
