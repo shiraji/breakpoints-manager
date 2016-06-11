@@ -9,6 +9,8 @@ This is an IntelliJ plugin that lets developers share sets of breakpoints.
 * Click "+"
 * Type name of the breakpoints set
 
+![save](website/images/save.gif)
+
 # How to share breakpoints to team?
 
 * Select the set of breakpoints
