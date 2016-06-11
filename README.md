@@ -33,6 +33,14 @@ or
 
 ![delete](website/images/delete.gif)
 
+# How to apply breakpoints?
+
+* Select the set of breakpoints
+* Right Click
+* Click "Apply the selected breakpoint[s]"
+
+![apply](website/images/apply.gif)
+
 # How to install?
 
 Use the IDE's plugin manager to install the latest version of the plugin.
