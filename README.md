@@ -18,6 +18,8 @@ This is an IntelliJ plugin that lets developers share sets of breakpoints.
 * Click `Share selected breakpoint[s] to project`
 * The plugin creates `.idea/breakpointManagerConfig.xml` and add/commit/push the file
 
+![share](website/images/share.gif)
+
 # How to delete breakpoints set?
 
 * Select the set of breakpoints
