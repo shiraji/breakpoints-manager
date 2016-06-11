@@ -31,6 +31,8 @@ or
 * Select the set of breakpoints
 * Click "-"
 
+![delete](website/images/delete.gif)
+
 # How to install?
 
 Use the IDE's plugin manager to install the latest version of the plugin.
