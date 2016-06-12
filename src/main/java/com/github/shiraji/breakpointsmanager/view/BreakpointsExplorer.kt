@@ -11,6 +11,7 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.*
 import com.intellij.ui.treeStructure.Tree
+import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.tree.TreeUtil
@@ -40,13 +41,11 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
         myModel = DefaultTreeModel(DefaultMutableTreeNode("Breakpoint Manager"))
         insertNodeFromConfig(BreakpointsManagerConfig.getInstance(project))
         insertNodeFromConfig(BreakpointsManagerConfigForWorkspace.getInstance(project))
-
         myTree = Tree(myModel).apply {
             isRootVisible = false
             showsRootHandles = true
             dragEnabled = false
             cellRenderer = NodeRenderer()
-
             addMouseListener(object : PopupHandler() {
                 override fun invokePopup(component: Component, x: Int, y: Int) {
                     val actionGroup = DefaultActionGroup()
@@ -59,12 +58,9 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                 }
             })
         }
-
         TreeUtil.installActions(myTree)
         TreeSpeedSearch(myTree)
-        setContent(ScrollPaneFactory.createScrollPane(myTree))
         ToolTipManager.sharedInstance().registerComponent(myTree)
-
         object : DoubleClickListener() {
             override fun onDoubleClick(event: MouseEvent?): Boolean {
                 event ?: return false
@@ -77,8 +73,11 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
                 return true
             }
         }.installOn(myTree)
-
         setToolbar(createToolbarPanel())
+        val pane = JPanel(GridLayoutManager(1, 1))
+        pane.add(ScrollPaneFactory.createScrollPane(myTree))
+        pane.add(SeparatorFactory.createSeparator("", null))
+        setContent(pane)
     }
 
     private fun insertNodeFromConfig(config: BreakpointsManagerConfig) {
