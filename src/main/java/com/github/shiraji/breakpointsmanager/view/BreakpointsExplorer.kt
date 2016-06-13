@@ -11,7 +11,7 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.*
 import com.intellij.ui.treeStructure.Tree
-import com.intellij.uiDesigner.core.GridLayoutManager
+import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.tree.TreeUtil
@@ -74,10 +74,11 @@ class BreakpointsExplorer(val project: Project) : SimpleToolWindowPanel(false, t
             }
         }.installOn(myTree)
         setToolbar(createToolbarPanel())
-        val pane = JPanel(GridLayoutManager(1, 1))
-        pane.add(ScrollPaneFactory.createScrollPane(myTree))
-        pane.add(SeparatorFactory.createSeparator("", null))
-        setContent(pane)
+
+        val foo = Foo()
+        foo.treePanel.add(ScrollPaneFactory.createScrollPane(myTree), GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0))
+        setContent(foo.component)
     }
 
     private fun insertNodeFromConfig(config: BreakpointsManagerConfig) {
